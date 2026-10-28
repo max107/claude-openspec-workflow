@@ -1,0 +1,15 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "claude-openspec",
+  "description": "Маркетплейс плагина openspec-workflow",
+  "owner": {
+    "name": "Maksim Falaleev"
+  },
+  "plugins": [
+    {
+      "name": "openspec-workflow",
+      "description": "OpenSpec workflow for Claude Code: changes as proposal, spec deltas and tasks, baseline specs, delegation to workers, acceptance against scenarios",
+      "source": "./plugins/openspec-workflow"
+    }
+  ]
+}

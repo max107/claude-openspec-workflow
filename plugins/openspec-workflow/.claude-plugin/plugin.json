@@ -1,0 +1,8 @@
+{
+  "name": "openspec-workflow",
+  "version": "0.1.0",
+  "description": "OpenSpec workflow for Claude Code: changes as proposal, spec deltas and tasks, baseline specs, delegation to workers, acceptance against scenarios",
+  "author": {
+    "name": "Maksim Falaleev"
+  }
+}
