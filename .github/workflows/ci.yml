@@ -1,0 +1,80 @@
+# check runs on every push and pull request. After a green check on a push to main, release tags the commit with the next
+# 0.0.N and creates a GitHub Release, and package publishes @max107/openspec-workflow at that version to GitHub Packages.
+# release and package are jobs of this workflow, not a workflow on tags: a tag pushed with GITHUB_TOKEN starts no workflow.
+name: ci
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+env:
+  BUN_VERSION: '1.4.4'
+  CLAUDE_CODE: '@anthropic-ai/claude-code@2.1.302'
+  DO_NOT_TRACK: '1'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      # Real Node for the validators and hook tests; the runner image ships it.
+      - run: node --version
+      - run: bun install --frozen-lockfile
+      - run: bun run check </dev/null
+      - run: bunx "$CLAUDE_CODE" plugin validate .
+      - run: for p in plugins/*/; do bunx "$CLAUDE_CODE" plugin validate "$p"; done
+
+  release:
+    needs: check
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    # Two pushes in a row must not compute the same tag.
+    concurrency:
+      group: release
+      cancel-in-progress: false
+    outputs:
+      version: ${{ steps.tag.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          last=$(git tag --list '0.0.*' --sort=-v:refname | head -n 1)
+          if [ -z "$last" ]; then next=0.0.1; range=HEAD; else next="0.0.$(( ${last##*.} + 1 ))"; range="$last..HEAD"; fi
+          notes=$(git log --pretty='- %s (%h)' "$range")
+          git tag "$next" "$GITHUB_SHA"
+          git push origin "$next"
+          gh release create "$next" --title "$next" --notes "$notes" --verify-tag
+          echo "version=$next" >> "$GITHUB_OUTPUT"
+
+  package:
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release.outputs.version }}
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      # bun looks the token up only for a registry set in .npmrc, not for the one in package.json publishConfig; the token
+      # goes only into the job's .npmrc, never into the repository.
+      - env:
+          NODE_AUTH_TOKEN: ${{ github.token }}
+        run: printf '@max107:registry=https://npm.pkg.github.com/\n//npm.pkg.github.com/:_authToken=%s\n' "$NODE_AUTH_TOKEN" > .npmrc
+      - run: bun pm pkg set version=${{ needs.release.outputs.version }}
+      - run: bun publish

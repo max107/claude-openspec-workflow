@@ -1,8 +1,20 @@
 {
-  "name": "@falaleev/claude-openspec",
+  "name": "@max107/openspec-workflow",
   "version": "0.0.0",
-  "private": true,
   "description": "Claude Code marketplace claude-openspec: the openspec-workflow plugin",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/max107/claude-openspec-workflow.git"
+  },
+  "files": [
+    ".claude-plugin",
+    "plugins",
+    "README.md",
+    "THIRD_PARTY_LICENSES.md"
+  ],
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
   "scripts": {
     "validate": "node scripts/ci/validate-skills.js && node scripts/ci/validate-agents.js && node scripts/ci/validate-commands.js && node scripts/ci/validate-no-personal-paths.js",
     "test": "bun test ./tests </dev/null",

@@ -20,7 +20,7 @@
    claude plugin marketplace update claude-openspec
    claude plugin update openspec-workflow@claude-openspec
    ```
-4. Коммит изменения.
+4. Коммит изменения, затем `git push origin main`: после зелёного `check` GitHub Actions ставит тег `0.0.N`, создаёт GitHub Release и публикует `@max107/openspec-workflow` в GitHub Packages (README.md, «Releasing changes»).
 
 Правки только в `CLAUDE.md`, `README.md` и `skill-authoring.md` не меняют плагин: версию не поднимать.
 

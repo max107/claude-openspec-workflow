@@ -20,6 +20,15 @@
 
 ## Установка
 
+Из GitHub:
+
+```bash
+claude plugin marketplace add max107/claude-openspec-workflow
+claude plugin install openspec-workflow@claude-openspec
+```
+
+Из локального клона:
+
 ```bash
 claude plugin marketplace add ~/projects/falaleev/claude-openspec
 claude plugin install openspec-workflow@claude-openspec
@@ -34,4 +43,21 @@ bun install
 bun run check </dev/null   # валидаторы, openspec validate --strict (если есть openspec/), тесты
 claude plugin validate .
 claude plugin validate plugins/openspec-workflow
+```
+
+## Выпуск изменений
+
+1. Правка и проверки из раздела «Проверка».
+2. Поднять патч-версию плагина в `plugins/openspec-workflow/.claude-plugin/plugin.json`; в `.claude-plugin/marketplace.json` версий нет.
+3. `git push origin main`.
+
+GitHub Actions (`.github/workflows/ci.yml`) на каждый пуш и pull request запускает джобу `check`: `bun run check` (валидаторы, тесты; `openspec validate --strict` только локально, где есть `openspec/`) и `claude plugin validate` маркетплейса и каждого плагина с закреплённой версией CLI.
+
+После зелёного `check` на `main` джоба `release` ставит следующий тег `0.0.N` и создаёт GitHub Release с коммитами со времени прошлого тега. Затем джоба `package` публикует `@max107/openspec-workflow` с версией тега в GitHub Packages (`https://npm.pkg.github.com/`), авторизуясь `GITHUB_TOKEN`. Обе джобы входят в тот же workflow: тег, запушенный с `GITHUB_TOKEN`, новый workflow не запускает. В пакет входят `.claude-plugin/`, `plugins/`, `README.md` и `THIRD_PARTY_LICENSES.md` (`files` в `package.json`; состав: `bun pm pack --dry-run`). Тег релиза — версия репозитория; версию плагина по-прежнему задаёт его `plugin.json`.
+
+Установка пакета:
+
+```bash
+printf '@max107:registry=https://npm.pkg.github.com/\n//npm.pkg.github.com/:_authToken=<GitHub token с read:packages>\n' >> ~/.npmrc
+bun add @max107/openspec-workflow
 ```
