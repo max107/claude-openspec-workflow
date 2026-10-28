@@ -10,6 +10,7 @@
     ".claude-plugin",
     "plugins",
     "README.md",
+    "README.ru.md",
     "THIRD_PARTY_LICENSES.md"
   ],
   "publishConfig": {

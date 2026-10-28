@@ -22,7 +22,7 @@
    ```
 4. Коммит изменения, затем `git push origin main`: после зелёного `check` GitHub Actions ставит тег `0.0.N`, создаёт GitHub Release и публикует `@max107/openspec-workflow` в GitHub Packages (README.md, «Releasing changes»).
 
-Правки только в `CLAUDE.md`, `README.md` и `skill-authoring.md` не меняют плагин: версию не поднимать.
+Правки только в `CLAUDE.md`, `README.md`, `README.ru.md` и `skill-authoring.md` не меняют плагин: версию не поднимать.
 
 ## Хук правил
 

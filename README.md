@@ -1,63 +1,65 @@
 # claude-openspec
 
-Маркетплейс `claude-openspec` с плагином `openspec-workflow`: имена с префиксом `claude-` Claude Code резервирует за Anthropic.
+[Русский](README.ru.md) | English
 
-Плагин Claude Code для работы через [OpenSpec](https://github.com/Fission-AI/OpenSpec). Большое изменение идёт как change: proposal, дельты спецификации, задачи с файлами и доказывающей командой. Задачи раздаются субагентам, работа принимается по сценариям, после приёмки change архивируется.
+The `claude-openspec` marketplace with the `openspec-workflow` plugin: Claude Code reserves names with the `claude-` prefix for Anthropic.
 
-Компоненты скопированы из плагина `my-workflow` (репозиторий `claude-workflow`), чтобы OpenSpec можно было ставить отдельно.
+A Claude Code plugin for working through [OpenSpec](https://github.com/Fission-AI/OpenSpec). A large change goes as an OpenSpec change: a proposal, spec deltas, and tasks that name their files and a proving command. Tasks are handed to subagents, work is accepted against the scenarios, and the change is archived after acceptance.
 
-## Состав
+The components were copied from the `my-workflow` plugin (the `claude-workflow` repository) so that OpenSpec can be installed on its own.
 
-| Компонент | Путь | Что делает |
+## Contents
+
+| Component | Path | What it does |
 | --- | --- | --- |
-| Скил `openspec` | `plugins/openspec-workflow/skills/openspec/SKILL.md` | Процесс: `openspec/` в проекте, базовая спецификация области, вопросы, change, передача задач, приёмка, архив |
-| Агент `spec-miner` | `plugins/openspec-workflow/agents/spec-miner.md` | Извлекает текущее поведение кода в `openspec/specs/<capability>/spec.md` или в дельту change |
-| Команда `/requirements` | `plugins/openspec-workflow/commands/requirements.md` | Проблема, доказательства, гипотеза, метрика и границы фичи до change |
-| Правило `openspec-changes` | `plugins/openspec-workflow/rules/openspec-changes.md` | Порог: когда изменение начинается как OpenSpec change |
-| Правило `delegation` | `plugins/openspec-workflow/rules/delegation.md` | Задачи change уходят субагентам (`sonnet`, `haiku`), основная модель пишет change и принимает работу |
-| Правило `code-discovery` | `plugins/openspec-workflow/rules/code-discovery.md` | Как искать код при написании change |
-| Хуки | `plugins/openspec-workflow/hooks/` | Доставка правил и напоминание о пороге на каждом сообщении, см. `hooks/README.md` |
+| Skill `openspec` | `plugins/openspec-workflow/skills/openspec/SKILL.md` | The process: `openspec/` in the project, a baseline spec of the area, questions, the change, task handoff, acceptance, archive |
+| Agent `spec-miner` | `plugins/openspec-workflow/agents/spec-miner.md` | Extracts the current behaviour of the code into `openspec/specs/<capability>/spec.md` or into a change delta |
+| Command `/requirements` | `plugins/openspec-workflow/commands/requirements.md` | The problem, evidence, hypothesis, metric and scope of a feature before its change |
+| Rule `openspec-changes` | `plugins/openspec-workflow/rules/openspec-changes.md` | The gate: when a change starts as an OpenSpec change |
+| Rule `delegation` | `plugins/openspec-workflow/rules/delegation.md` | Change tasks go to subagents (`sonnet`, `haiku`); the main model writes the change and accepts the work |
+| Rule `code-discovery` | `plugins/openspec-workflow/rules/code-discovery.md` | How to find code while writing a change |
+| Hooks | `plugins/openspec-workflow/hooks/` | Deliver the rules and a reminder of the gate on every message, see `hooks/README.md` |
 
-## Установка
+## Installation
 
-Из GitHub:
+From GitHub:
 
 ```bash
 claude plugin marketplace add max107/claude-openspec-workflow
 claude plugin install openspec-workflow@claude-openspec
 ```
 
-Из локального клона:
+From a local clone:
 
 ```bash
 claude plugin marketplace add ~/projects/falaleev/claude-openspec
 claude plugin install openspec-workflow@claude-openspec
 ```
 
-При включённом `my-workflow` те же скил, агент, команда и правила приходят дважды: `my-workflow:openspec` и `openspec-workflow:openspec`.
+With `my-workflow` enabled, the same skill, agent, command and rules arrive twice: `my-workflow:openspec` and `openspec-workflow:openspec`.
 
-## Проверка
+## Checks
 
 ```bash
 bun install
-bun run check </dev/null   # валидаторы, openspec validate --strict (если есть openspec/), тесты
+bun run check </dev/null   # validators, openspec validate --strict (when openspec/ exists), tests
 claude plugin validate .
 claude plugin validate plugins/openspec-workflow
 ```
 
-## Выпуск изменений
+## Releasing changes
 
-1. Правка и проверки из раздела «Проверка».
-2. Поднять патч-версию плагина в `plugins/openspec-workflow/.claude-plugin/plugin.json`; в `.claude-plugin/marketplace.json` версий нет.
+1. Make the change and run the checks from "Checks".
+2. Bump the plugin's patch version in `plugins/openspec-workflow/.claude-plugin/plugin.json`; `.claude-plugin/marketplace.json` holds no versions.
 3. `git push origin main`.
 
-GitHub Actions (`.github/workflows/ci.yml`) на каждый пуш и pull request запускает джобу `check`: `bun run check` (валидаторы, тесты; `openspec validate --strict` только локально, где есть `openspec/`) и `claude plugin validate` маркетплейса и каждого плагина с закреплённой версией CLI.
+GitHub Actions (`.github/workflows/ci.yml`) runs the `check` job on every push and pull request: `bun run check` (validators, tests; `openspec validate --strict` only locally, where `openspec/` exists) and `claude plugin validate` of the marketplace and of each plugin with a pinned CLI version.
 
-После зелёного `check` на `main` джоба `release` ставит следующий тег `0.0.N` и создаёт GitHub Release с коммитами со времени прошлого тега. Затем джоба `package` публикует `@max107/openspec-workflow` с версией тега в GitHub Packages (`https://npm.pkg.github.com/`), авторизуясь `GITHUB_TOKEN`. Обе джобы входят в тот же workflow: тег, запушенный с `GITHUB_TOKEN`, новый workflow не запускает. В пакет входят `.claude-plugin/`, `plugins/`, `README.md` и `THIRD_PARTY_LICENSES.md` (`files` в `package.json`; состав: `bun pm pack --dry-run`). Тег релиза — версия репозитория; версию плагина по-прежнему задаёт его `plugin.json`.
+After a green `check` on `main`, the `release` job tags the commit with the next `0.0.N` and creates a GitHub Release with the commits since the previous tag. Then the `package` job publishes `@max107/openspec-workflow` at the tag's version to GitHub Packages (`https://npm.pkg.github.com/`), authenticating with `GITHUB_TOKEN`. Both jobs are part of the same workflow: a tag pushed with `GITHUB_TOKEN` starts no new workflow. The package holds `.claude-plugin/`, `plugins/`, `README.md`, `README.ru.md` and `THIRD_PARTY_LICENSES.md` (`files` in `package.json`; contents: `bun pm pack --dry-run`). The release tag is the repository's version; the plugin's version is still set by its `plugin.json`.
 
-Установка пакета:
+Installing the package:
 
 ```bash
-printf '@max107:registry=https://npm.pkg.github.com/\n//npm.pkg.github.com/:_authToken=<GitHub token с read:packages>\n' >> ~/.npmrc
+printf '@max107:registry=https://npm.pkg.github.com/\n//npm.pkg.github.com/:_authToken=<GitHub token with read:packages>\n' >> ~/.npmrc
 bun add @max107/openspec-workflow
 ```
